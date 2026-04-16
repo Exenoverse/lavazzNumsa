@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Negocios Encontrados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        .card.convencido {
+            border-color: #2ecc71 !important; /* verde */
+        }
+
+        .card.rechazado {
+            border-color: #e74c3c !important; /* rojo */
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .address {
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .phone {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0078ff;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .rating {
+            margin-top: 10px;
+            color: #444;
+        }
+
+        .hours {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            white-space: pre-line;
+        }
+
+        .popup-menu {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .popup-menu button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .popup-menu button:hover {
+            background: #eee;
+        }
+
+        .call-counter {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Negocios Encontrados</h1>
+
+<div class="container" id="results"></div>
+
+<script>
+    async function loadData() {
+        const response = await fetch("resultados.json");
+        const data = await response.json();
+
+        const container = document.getElementById("results");
+
+        data.forEach(item => {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const title = item.title || "Sin nombre";
+            const phone = item.phone || "Sin teléfono";
+            const address = item.address || "Sin dirección";
+            const rating = item.totalScore 
+                ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` 
+                : "Sin rating";
+
+            let hours = "";
+            if (item.openingHours) {
+                hours = item.openingHours
+                    .map(h => `${h.day}: ${h.hours}`)
+                    .join("\n");
+            }
+
+            const phoneId = item.placeId || item.title.replace(/\s+/g, "_");
+
+            const callCount = localStorage.getItem(`calls_${phoneId}`) || 0;
+
+            card.innerHTML = `
+                <div class="title">${title}</div>
+                <div class="address">${address}</div>
+
+                <div class="phone" data-phone="${phone}" data-id="${phoneId}">
+                    ${phone}
+                </div>
+
+                <div class="call-counter" id="counter_${phoneId}">
+                    Llamadas: ${callCount}
+                </div>
+
+                <div class="rating">${rating}</div>
+                <div class="hours">${hours}</div>
+            `;
+
+            container.appendChild(card);
+
+            // Aplicar color si ya tiene estado guardado
+            applyStatusColor(phoneId);
+        });
+
+        // Activar eventos después de crear los elementos
+        document.querySelectorAll(".phone").forEach(el => {
+            el.addEventListener("click", function (e) {
+                e.stopPropagation();
+                openMenu(this.dataset.phone, this.dataset.id, this);
+            });
+        });
+    }
+
+    function openMenu(phone, id, element) {
+        closeExistingMenus();
+
+        const menu = document.createElement("div");
+        menu.className = "popup-menu";
+
+        menu.innerHTML = `
+            <button onclick="callNumber('${phone}', '${id}')">📞 Llamar</button>
+            <button onclick="markStatus('${id}', 'convencido')">✔️ Convencido</button>
+            <button onclick="markStatus('${id}', 'rechazado')">❌ Rechazado</button>
+        `;
+
+        document.body.appendChild(menu);
+
+        const rect = element.getBoundingClientRect();
+        menu.style.top = rect.bottom + "px";
+        menu.style.left = rect.left + "px";
+
+        setTimeout(() => {
+            document.addEventListener("click", closeExistingMenus, { once: true });
+        }, 100);
+    }
+
+    function closeExistingMenus() {
+        document.querySelectorAll(".popup-menu").forEach(m => m.remove());
+    }
+
+    function callNumber(phone, id) {
+        incrementCounter(id);
+        saveHistory(id, "Llamada");
+        window.location.href = `tel:${phone}`;
+        closeExistingMenus();
+    }
+
+    function markStatus(id, status) {
+        incrementCounter(id);
+        saveHistory(id, status);
+
+        localStorage.setItem(`status_${id}`, status);
+        applyStatusColor(id);
+
+        closeExistingMenus();
+    }
+
+    function applyStatusColor(id) {
+        const status = localStorage.getItem(`status_${id}`);
+        const card = document.querySelector(`[data-id="${id}"]`).closest(".card");
+
+        card.classList.remove("convencido", "rechazado");
+
+        if (status === "convencido") {
+            card.classList.add("convencido");
+        } else if (status === "rechazado") {
+            card.classList.add("rechazado");
+        }
+    }
+
+    function incrementCounter(id) {
+        let count = parseInt(localStorage.getItem(`calls_${id}`) || "0");
+        count++;
+        localStorage.setItem(`calls_${id}`, count);
+        document.getElementById(`counter_${id}`).innerText = `Llamadas: ${count}`;
+    }
+
+    function saveHistory(id, action) {
+        const history = JSON.parse(localStorage.getItem("call_history") || "[]");
+
+        history.push({
+            id,
+            action,
+            timestamp: new Date().toLocaleString()
+        });
+
+        localStorage.setItem("call_history", JSON.stringify(history));
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
