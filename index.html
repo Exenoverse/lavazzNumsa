@@ -247,17 +247,22 @@
     }
 
     function applyStatusColor(id) {
-        const status = localStorage.getItem(`status_${id}`);
-        const card = document.querySelector(`[data-id="${id}"]`).closest(".card");
+    const status = localStorage.getItem(`status_${id}`);
+    const phoneElement = document.querySelector(`[data-id="${id}"]`);
+    if (!phoneElement) return; // <--- evita el error
 
-        card.classList.remove("convencido", "rechazado");
+    const card = phoneElement.closest(".card");
+    if (!card) return; // <--- evita el error
 
-        if (status === "convencido") {
-            card.classList.add("convencido");
-        } else if (status === "rechazado") {
-            card.classList.add("rechazado");
-        }
+    card.classList.remove("convencido", "rechazado");
+
+    if (status === "convencido") {
+        card.classList.add("convencido");
+    } else if (status === "rechazado") {
+        card.classList.add("rechazado");
     }
+}
+
 
     function incrementCounter(id) {
         let count = parseInt(localStorage.getItem(`calls_${id}`) || "0");
