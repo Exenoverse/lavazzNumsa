@@ -117,7 +117,7 @@
 <script>
     const BACKEND_URL = "https://lavazz-nums.vercel.app";
 
-    // 🔥 Aquí guardamos los datos del backend en memoria
+    // 🔥 Datos del backend en memoria
     let dataBackend = {};
 
     async function guardarEnBackend() {
@@ -133,7 +133,6 @@
         const data = await r.json();
         dataBackend = data.llamadas || {};
     }
-
 
     async function loadData() {
         await cargarDesdeBackend();
@@ -163,7 +162,12 @@
 
             const id = item.placeId || item.title.replace(/\s+/g, "_");
 
-            const info = dataBackend[id] || { calls: 0, status: null };
+            // 🔥 Si no existe en backend, lo creamos
+            if (!dataBackend[id]) {
+                dataBackend[id] = { calls: 0, status: null };
+            }
+
+            const info = dataBackend[id];
 
             card.innerHTML = `
                 <div class="title">${title}</div>
@@ -183,9 +187,15 @@
 
             container.appendChild(card);
 
-            applyStatusColor(id);
+            // 🔥 Aplicar estado y color
+            if (info.status === "convencido") {
+                card.classList.add("convencido");
+            } else if (info.status === "rechazado") {
+                card.classList.add("rechazado");
+            }
         });
 
+        // Activar eventos
         document.querySelectorAll(".phone").forEach(el => {
             el.addEventListener("click", function (e) {
                 e.stopPropagation();
@@ -228,39 +238,16 @@
     }
 
     function markStatus(id, status) {
-        if (!dataBackend[id]) dataBackend[id] = { calls: 0, status: null };
         dataBackend[id].status = status;
-
-        applyStatusColor(id);
         guardarEnBackend();
+        loadData(); // 🔥 Recargar visualmente
         closeExistingMenus();
     }
 
-    function applyStatusColor(id) {
-        const info = dataBackend[id];
-        const phoneElement = document.querySelector(`[data-id="${id}"]`);
-        if (!phoneElement) return;
-
-        const card = phoneElement.closest(".card");
-        if (!card) return;
-
-        card.classList.remove("convencido", "rechazado");
-
-        if (info?.status === "convencido") {
-            card.classList.add("convencido");
-        } else if (info?.status === "rechazado") {
-            card.classList.add("rechazado");
-        }
-    }
-
     function incrementCounter(id) {
-        if (!dataBackend[id]) dataBackend[id] = { calls: 0, status: null };
         dataBackend[id].calls++;
-
-        document.getElementById(`counter_${id}`).innerText =
-            `Llamadas: ${dataBackend[id].calls}`;
-
         guardarEnBackend();
+        loadData(); // 🔥 Recargar visualmente
     }
 
     loadData();
