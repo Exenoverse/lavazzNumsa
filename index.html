@@ -115,7 +115,34 @@
 <div class="container" id="results"></div>
 
 <script>
+    const BACKEND_URL = "https://lavazza-backend.vercel.app";
+
+        async function guardarEnBackend() {
+        const estado = {
+            llamadas: JSON.parse(JSON.stringify(localStorage))
+        };
+    
+        await fetch(`${BACKEND_URL}/api/save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ payload: estado })
+        });
+    }
+    
+    async function cargarDesdeBackend() {
+        const r = await fetch(`${BACKEND_URL}/api/load`);
+        const data = await r.json();
+    
+        if (data.llamadas) {
+            for (const key in data.llamadas) {
+                localStorage.setItem(key, data.llamadas[key]);
+            }
+        }
+    }
+
+    
     async function loadData() {
+        await cargarDesdeBackend();
         const response = await fetch("resultados.json");
         const data = await response.json();
 
@@ -214,7 +241,8 @@
 
         localStorage.setItem(`status_${id}`, status);
         applyStatusColor(id);
-
+        
+        guardarEnBackend();
         closeExistingMenus();
     }
 
@@ -236,6 +264,7 @@
         count++;
         localStorage.setItem(`calls_${id}`, count);
         document.getElementById(`counter_${id}`).innerText = `Llamadas: ${count}`;
+        guardarEnBackend();
     }
 
     function saveHistory(id, action) {
@@ -248,6 +277,7 @@
         });
 
         localStorage.setItem("call_history", JSON.stringify(history));
+        guardarEnBackend();
     }
 
     loadData();
