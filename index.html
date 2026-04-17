@@ -124,7 +124,7 @@
         await fetch(`${BACKEND_URL}/api/save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ payload: dataBackend })
+            body: JSON.stringify({ llamadas: dataBackend })
         });
     }
 
@@ -133,6 +133,7 @@
         const data = await r.json();
         dataBackend = data.llamadas || {};
     }
+
 
     async function loadData() {
         await cargarDesdeBackend();
