@@ -210,9 +210,14 @@ async function tryLogin() {
         return;
     }
 
-    const hash = await sha256(pin);
+    // Generar hash SHA-256 del PIN
+    const enc = new TextEncoder().encode(pin);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    const hash = Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
-    // Intentar login contra backend
+    // Enviar hash al backend
     const res = await fetch(`${BACKEND_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -224,18 +229,17 @@ async function tryLogin() {
         return;
     }
 
-    // Guardar en memoria y localStorage
-    CURRENT_USER = name;
-    ACCESS_HASH = hash;
-    localStorage.setItem("caller_name", CURRENT_USER);
-    localStorage.setItem("access_hash", ACCESS_HASH);
+    // 🔥 GUARDAR HASH EN LOCALSTORAGE (ESTO ES LO QUE TE FALTABA)
+    localStorage.setItem("caller_name", name);
+    localStorage.setItem("access_hash", hash);
 
-    // Mostrar app
+    // Mostrar la app
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app").style.display = "block";
 
     loadData();
 }
+
 
 document.getElementById("login-button").addEventListener("click", () => {
     tryLogin();
