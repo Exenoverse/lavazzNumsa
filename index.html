@@ -112,58 +112,196 @@
             font-size: 14px;
             color: #444;
         }
+
+        /* Login */
+        #login-container {
+            max-width: 400px;
+            margin: 60px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        #login-container h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        #login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        #login-container button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            background: #0078ff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #login-container button:hover {
+            background: #005fcc;
+        }
+
+        #login-error {
+            color: #e74c3c;
+            margin-top: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        #app {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-<h1>Negocios Encontrados</h1>
+<div id="login-container">
+    <h2>Acceso</h2>
+    <input type="text" id="login-name" placeholder="Tu nombre">
+    <input type="password" id="login-pin" placeholder="PIN de acceso">
+    <button id="login-button">Entrar</button>
+    <div id="login-error"></div>
+</div>
 
-<div class="container" id="results"></div>
+<div id="app">
+    <h1>Negocios Encontrados</h1>
+    <div class="container" id="results"></div>
+</div>
 
 <script>
-/* ============================================================
-   IDENTIFICACIÓN DEL USUARIO
-   ============================================================ */
-const CURRENT_USER =
-    localStorage.getItem("caller_name") ||
-    prompt("¿Cómo te llamas? (para registrar los cambios)") ||
-    "anon";
-
-localStorage.setItem("caller_name", CURRENT_USER);
-
-/* ============================================================
-   CONFIG
-   ============================================================ */
 const BACKEND_URL = "https://lavazz-nums.vercel.app";
 
-/* ============================================================
-   ESTADO EN MEMORIA
-   ============================================================ */
+let CURRENT_USER = null;
+let ACCESS_HASH = null;
 let dataBackend = {};
 
-/* ============================================================
-   GUARDAR EN BACKEND
-   ============================================================ */
+/* ================== UTIL: SHA-256 ================== */
+async function sha256(text) {
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+/* ================== LOGIN FLOW ================== */
+async function tryLogin() {
+    const nameInput = document.getElementById("login-name");
+    const pinInput = document.getElementById("login-pin");
+    const errorDiv = document.getElementById("login-error");
+
+    const name = nameInput.value.trim() || "anon";
+    const pin = pinInput.value.trim();
+
+    if (!pin) {
+        errorDiv.textContent = "Debes introducir el PIN.";
+        return;
+    }
+
+    const hash = await sha256(pin);
+
+    // Intentar login contra backend
+    const res = await fetch(`${BACKEND_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hash })
+    });
+
+    if (!res.ok) {
+        errorDiv.textContent = "PIN incorrecto o acceso denegado.";
+        return;
+    }
+
+    // Guardar en memoria y localStorage
+    CURRENT_USER = name;
+    ACCESS_HASH = hash;
+    localStorage.setItem("caller_name", CURRENT_USER);
+    localStorage.setItem("access_hash", ACCESS_HASH);
+
+    // Mostrar app
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    loadData();
+}
+
+document.getElementById("login-button").addEventListener("click", () => {
+    tryLogin();
+});
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Enter" && document.getElementById("login-container").style.display !== "none") {
+        tryLogin();
+    }
+});
+
+/* ================== AUTO-LOGIN SI YA TIENE HASH ================== */
+(async function initLogin() {
+    const savedName = localStorage.getItem("caller_name");
+    const savedHash = localStorage.getItem("access_hash");
+
+    if (savedName && savedHash) {
+        // Probar si el hash sigue siendo válido
+        const res = await fetch(`${BACKEND_URL}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hash: savedHash })
+        });
+
+        if (res.ok) {
+            CURRENT_USER = savedName;
+            ACCESS_HASH = savedHash;
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            loadData();
+            return;
+        } else {
+            localStorage.removeItem("access_hash");
+        }
+    }
+
+    // Mostrar login si no hay acceso válido
+    document.getElementById("login-container").style.display = "block";
+})();
+
+/* ================== BACKEND HELPERS ================== */
 async function guardarEnBackend() {
     await fetch(`${BACKEND_URL}/api/save`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "X-Access-Hash": ACCESS_HASH
+        },
         body: JSON.stringify({ payload: dataBackend })
     });
 }
 
-/* ============================================================
-   CARGAR DESDE BACKEND
-   ============================================================ */
 async function cargarDesdeBackend() {
-    const r = await fetch(`${BACKEND_URL}/api/load`);
+    const r = await fetch(`${BACKEND_URL}/api/load`, {
+        headers: {
+            "X-Access-Hash": ACCESS_HASH
+        }
+    });
+    if (!r.ok) {
+        throw new Error("No autorizado o error de backend");
+    }
     const data = await r.json();
     dataBackend = data.payload || {};
 }
 
-/* ============================================================
-   CARGAR TODO
-   ============================================================ */
+/* ================== APP ================== */
 async function loadData() {
     await cargarDesdeBackend();
 
@@ -177,11 +315,9 @@ async function loadData() {
         const card = document.createElement("div");
         card.className = "card";
 
-        // ID estable
         const id = item.placeId ||
             btoa((item.title + item.address).toLowerCase()).replace(/=/g, "");
 
-        // Crear si no existe
         if (!dataBackend[id]) {
             dataBackend[id] = { calls: 0, status: null, history: [] };
         }
@@ -232,9 +368,6 @@ async function loadData() {
     activarEventos();
 }
 
-/* ============================================================
-   EVENTOS
-   ============================================================ */
 function activarEventos() {
     document.querySelectorAll(".phone").forEach(el => {
         el.addEventListener("click", function (e) {
@@ -244,18 +377,12 @@ function activarEventos() {
     });
 }
 
-/* ============================================================
-   APLICAR ESTADO VISUAL
-   ============================================================ */
 function aplicarEstado(card, status) {
     card.classList.remove("convencido", "rechazado");
     if (status === "convencido") card.classList.add("convencido");
     if (status === "rechazado") card.classList.add("rechazado");
 }
 
-/* ============================================================
-   MENÚ POPUP
-   ============================================================ */
 function openMenu(phone, id, element) {
     closeExistingMenus();
 
@@ -283,11 +410,8 @@ function closeExistingMenus() {
     document.querySelectorAll(".popup-menu").forEach(m => m.remove());
 }
 
-/* ============================================================
-   ACCIONES
-   ============================================================ */
 async function callNumber(phone, id) {
-    incrementCounter(id);
+    await incrementCounter(id);
     window.location.href = `tel:${phone}`;
     closeExistingMenus();
 }
@@ -305,7 +429,7 @@ async function markStatus(id, status) {
     });
 
     await guardarEnBackend();
-    loadData();
+    await loadData();
     closeExistingMenus();
 }
 
@@ -321,13 +445,8 @@ async function incrementCounter(id) {
     });
 
     await guardarEnBackend();
-    loadData();
+    await loadData();
 }
-
-/* ============================================================
-   INICIO
-   ============================================================ */
-loadData();
 </script>
 
 </body>
