@@ -146,7 +146,7 @@ async function loadData() {
         const card = document.createElement("div");
         card.className = "card";
 
-        const id = item.placeId || item.title.replace(/\s+/g, "_");
+        const id = item.placeId || btoa((item.title + item.address).toLowerCase()).replace(/=/g, "");
 
         if (!dataBackend[id]) {
             dataBackend[id] = { calls: 0, status: null };
