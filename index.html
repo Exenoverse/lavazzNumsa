@@ -210,14 +210,8 @@ async function tryLogin() {
         return;
     }
 
-    // Generar hash SHA-256 del PIN
-    const enc = new TextEncoder().encode(pin);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    const hash = Array.from(new Uint8Array(buf))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+    const hash = await sha256(pin);
 
-    // Enviar hash al backend
     const res = await fetch(`${BACKEND_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -229,21 +223,21 @@ async function tryLogin() {
         return;
     }
 
-    // 🔥 GUARDAR HASH EN LOCALSTORAGE (ESTO ES LO QUE TE FALTABA)
+    // Guardar en localStorage
     localStorage.setItem("caller_name", name);
     localStorage.setItem("access_hash", hash);
 
-    // Mostrar la app
+    // 🔥 ESTA LÍNEA FALTABA
+    ACCESS_HASH = hash;
+    CURRENT_USER = name;
+
     document.getElementById("login-container").style.display = "none";
     document.getElementById("app").style.display = "block";
 
     loadData();
 }
 
-
-document.getElementById("login-button").addEventListener("click", () => {
-    tryLogin();
-});
+document.getElementById("login-button").addEventListener("click", tryLogin);
 
 document.addEventListener("keydown", e => {
     if (e.key === "Enter" && document.getElementById("login-container").style.display !== "none") {
@@ -251,13 +245,12 @@ document.addEventListener("keydown", e => {
     }
 });
 
-/* ================== AUTO-LOGIN SI YA TIENE HASH ================== */
+/* ================== AUTO-LOGIN ================== */
 (async function initLogin() {
     const savedName = localStorage.getItem("caller_name");
     const savedHash = localStorage.getItem("access_hash");
 
     if (savedName && savedHash) {
-        // Probar si el hash sigue siendo válido
         const res = await fetch(`${BACKEND_URL}/api/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -276,7 +269,6 @@ document.addEventListener("keydown", e => {
         }
     }
 
-    // Mostrar login si no hay acceso válido
     document.getElementById("login-container").style.display = "block";
 })();
 
