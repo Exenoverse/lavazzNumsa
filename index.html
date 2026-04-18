@@ -2,192 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Negocios Encontrados</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: 0.2s;
-            border: 3px solid transparent;
-        }
-
-        .card:hover {
-            transform: scale(1.02);
-        }
-
-        .card.convencido {
-            border-color: #2ecc71 !important;
-        }
-
-        .card.rechazado {
-            border-color: #e74c3c !important;
-        }
-
-        .title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #222;
-            margin-bottom: 8px;
-        }
-
-        .address {
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .phone {
-            font-size: 18px;
-            font-weight: bold;
-            color: #0078ff;
-            cursor: pointer;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-
-        .rating {
-            margin-top: 10px;
-            color: #444;
-        }
-
-        .hours {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #666;
-            white-space: pre-line;
-        }
-
-        .last-change {
-            margin-top: 8px;
-            font-size: 13px;
-            color: #777;
-        }
-
-        .popup-menu {
-            position: absolute;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            padding: 10px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .popup-menu button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        .popup-menu button:hover {
-            background: #eee;
-        }
-
-        .call-counter {
-            margin-top: 5px;
-            font-size: 14px;
-            color: #444;
-        }
-
-        /* Login */
-        #login-container {
-            max-width: 400px;
-            margin: 60px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        #login-container h2 {
-            margin-top: 0;
-            text-align: center;
-        }
-
-        #login-container input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-        }
-
-        #login-container button {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            background: #0078ff;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        #login-container button:hover {
-            background: #005fcc;
-        }
-
-        #login-error {
-            color: #e74c3c;
-            margin-top: 8px;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        #app {
-            display: none;
-        }
-    </style>
+    <title>Login</title>
 </head>
 <body>
 
-<div id="login-container">
-    <h2>Acceso</h2>
-    <input type="text" id="login-name" placeholder="Tu nombre">
-    <input type="password" id="login-pin" placeholder="PIN de acceso">
-    <button id="login-button">Entrar</button>
-    <div id="login-error"></div>
-</div>
+<h2>Acceso</h2>
 
-<div id="app">
-    <h1>Negocios Encontrados</h1>
-    <div class="container" id="results"></div>
-</div>
+<input type="text" id="login-name" placeholder="Tu nombre">
+<input type="password" id="login-pin" placeholder="PIN">
+<button id="login-button">Entrar</button>
+
+<div id="login-error" style="color:red;"></div>
 
 <script>
 const BACKEND_URL = "https://lavazz-nums.vercel.app";
 
-let CURRENT_USER = null;
-let ACCESS_HASH = null;
-let dataBackend = {};
-
-/* ================== UTIL: SHA-256 ================== */
 async function sha256(text) {
     const enc = new TextEncoder().encode(text);
     const buf = await crypto.subtle.digest("SHA-256", enc);
@@ -196,14 +25,10 @@ async function sha256(text) {
         .join("");
 }
 
-/* ================== LOGIN FLOW ================== */
 async function tryLogin() {
-    const nameInput = document.getElementById("login-name");
-    const pinInput = document.getElementById("login-pin");
+    const name = document.getElementById("login-name").value.trim() || "anon";
+    const pin = document.getElementById("login-pin").value.trim();
     const errorDiv = document.getElementById("login-error");
-
-    const name = nameInput.value.trim() || "anon";
-    const pin = pinInput.value.trim();
 
     if (!pin) {
         errorDiv.textContent = "Debes introducir el PIN.";
@@ -219,230 +44,19 @@ async function tryLogin() {
     });
 
     if (!res.ok) {
-        errorDiv.textContent = "PIN incorrecto o acceso denegado.";
+        errorDiv.textContent = "PIN incorrecto.";
         return;
     }
 
-    // Guardar en localStorage
+    // Guardar datos
     localStorage.setItem("caller_name", name);
     localStorage.setItem("access_hash", hash);
 
-    // 🔥 ESTA LÍNEA FALTABA
-    ACCESS_HASH = hash;
-    CURRENT_USER = name;
-
-    document.getElementById("login-container").style.display = "none";
-    document.getElementById("app").style.display = "block";
-
-    loadData();
+    // Ir a la app
+    window.location.href = "app.html";
 }
 
-document.getElementById("login-button").addEventListener("click", tryLogin);
-
-document.addEventListener("keydown", e => {
-    if (e.key === "Enter" && document.getElementById("login-container").style.display !== "none") {
-        tryLogin();
-    }
-});
-
-/* ================== AUTO-LOGIN ================== */
-(async function initLogin() {
-    const savedName = localStorage.getItem("caller_name");
-    const savedHash = localStorage.getItem("access_hash");
-
-    if (savedName && savedHash) {
-        const res = await fetch(`${BACKEND_URL}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hash: savedHash })
-        });
-
-        if (res.ok) {
-            CURRENT_USER = savedName;
-            ACCESS_HASH = savedHash;
-            document.getElementById("login-container").style.display = "none";
-            document.getElementById("app").style.display = "block";
-            loadData();
-            return;
-        } else {
-            localStorage.removeItem("access_hash");
-        }
-    }
-
-    document.getElementById("login-container").style.display = "block";
-})();
-
-/* ================== BACKEND HELPERS ================== */
-async function guardarEnBackend() {
-    await fetch(`${BACKEND_URL}/api/save`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-Access-Hash": ACCESS_HASH
-        },
-        body: JSON.stringify({ payload: dataBackend })
-    });
-}
-
-async function cargarDesdeBackend() {
-    const r = await fetch(`${BACKEND_URL}/api/load`, {
-        headers: {
-            "X-Access-Hash": ACCESS_HASH
-        }
-    });
-    if (!r.ok) {
-        throw new Error("No autorizado o error de backend");
-    }
-    const data = await r.json();
-    dataBackend = data.payload || {};
-}
-
-/* ================== APP ================== */
-async function loadData() {
-    await cargarDesdeBackend();
-
-    const response = await fetch("resultados.json");
-    const data = await response.json();
-
-    const container = document.getElementById("results");
-    container.innerHTML = "";
-
-    data.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const id = item.placeId ||
-            btoa((item.title + item.address).toLowerCase()).replace(/=/g, "");
-
-        if (!dataBackend[id]) {
-            dataBackend[id] = { calls: 0, status: null, history: [] };
-        }
-
-        const info = dataBackend[id];
-
-        card.dataset.id = id;
-
-        const lastEntry = info.history.length
-            ? info.history[info.history.length - 1]
-            : null;
-
-        const lastText = lastEntry
-            ? `Último cambio: ${
-                lastEntry.type === "call"
-                    ? "Llamada"
-                    : "Estado: " + lastEntry.status
-              } por ${lastEntry.by}`
-            : "Sin cambios registrados";
-
-        card.innerHTML = `
-            <div class="title">${item.title || "Sin nombre"}</div>
-            <div class="address">${item.address || "Sin dirección"}</div>
-
-            <div class="phone" data-phone="${item.phone}" data-id="${id}">
-                ${item.phone || "Sin teléfono"}
-            </div>
-
-            <div class="call-counter" id="counter_${id}">
-                Llamadas: ${info.calls}
-            </div>
-
-            <div class="rating">
-                ${item.totalScore ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` : "Sin rating"}
-            </div>
-
-            <div class="hours">
-                ${(item.openingHours || []).map(h => `${h.day}: ${h.hours}`).join("\n")}
-            </div>
-
-            <div class="last-change">${lastText}</div>
-        `;
-
-        aplicarEstado(card, info.status);
-        container.appendChild(card);
-    });
-
-    activarEventos();
-}
-
-function activarEventos() {
-    document.querySelectorAll(".phone").forEach(el => {
-        el.addEventListener("click", function (e) {
-            e.stopPropagation();
-            openMenu(this.dataset.phone, this.dataset.id, this);
-        });
-    });
-}
-
-function aplicarEstado(card, status) {
-    card.classList.remove("convencido", "rechazado");
-    if (status === "convencido") card.classList.add("convencido");
-    if (status === "rechazado") card.classList.add("rechazado");
-}
-
-function openMenu(phone, id, element) {
-    closeExistingMenus();
-
-    const menu = document.createElement("div");
-    menu.className = "popup-menu";
-
-    menu.innerHTML = `
-        <button onclick="callNumber('${phone}', '${id}')">📞 Llamar</button>
-        <button onclick="markStatus('${id}', 'convencido')">✔️ Convencido</button>
-        <button onclick="markStatus('${id}', 'rechazado')">❌ Rechazado</button>
-    `;
-
-    document.body.appendChild(menu);
-
-    const rect = element.getBoundingClientRect();
-    menu.style.top = rect.bottom + "px";
-    menu.style.left = rect.left + "px";
-
-    setTimeout(() => {
-        document.addEventListener("click", closeExistingMenus, { once: true });
-    }, 100);
-}
-
-function closeExistingMenus() {
-    document.querySelectorAll(".popup-menu").forEach(m => m.remove());
-}
-
-async function callNumber(phone, id) {
-    await incrementCounter(id);
-    window.location.href = `tel:${phone}`;
-    closeExistingMenus();
-}
-
-async function markStatus(id, status) {
-    const info = dataBackend[id];
-
-    info.status = status;
-
-    info.history.push({
-        type: "status",
-        status,
-        by: CURRENT_USER,
-        at: new Date().toISOString()
-    });
-
-    await guardarEnBackend();
-    await loadData();
-    closeExistingMenus();
-}
-
-async function incrementCounter(id) {
-    const info = dataBackend[id];
-
-    info.calls++;
-
-    info.history.push({
-        type: "call",
-        by: CURRENT_USER,
-        at: new Date().toISOString()
-    });
-
-    await guardarEnBackend();
-    await loadData();
-}
+document.getElementById("login-button").onclick = tryLogin;
 </script>
 
 </body>
