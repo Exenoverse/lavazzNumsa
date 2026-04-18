@@ -106,6 +106,12 @@
             font-size: 14px;
             color: #444;
         }
+
+        .last-change {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #777;
+        }
     </style>
 </head>
 <body>
@@ -113,12 +119,31 @@
 <h1>Negocios Encontrados</h1>
 
 <div class="container" id="results"></div>
+
 <script>
+/* ============================================================
+   IDENTIFICACIÓN DEL USUARIO (solo se guarda en localStorage)
+   ============================================================ */
+const CURRENT_USER =
+    localStorage.getItem("caller_name") ||
+    prompt("¿Cómo te llamas? (para registrar los cambios)") ||
+    "anon";
+
+localStorage.setItem("caller_name", CURRENT_USER);
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
 const BACKEND_URL = "https://lavazz-nums.vercel.app";
 
-// 🔥 Datos del backend en memoria
+/* ============================================================
+   ESTADO EN MEMORIA (backend)
+   ============================================================ */
 let dataBackend = {};
 
+/* ============================================================
+   GUARDAR EN BACKEND
+   ============================================================ */
 async function guardarEnBackend() {
     await fetch(`${BACKEND_URL}/api/save`, {
         method: "POST",
@@ -127,12 +152,18 @@ async function guardarEnBackend() {
     });
 }
 
+/* ============================================================
+   CARGAR DESDE BACKEND
+   ============================================================ */
 async function cargarDesdeBackend() {
     const r = await fetch(`${BACKEND_URL}/api/load`);
     const data = await r.json();
     dataBackend = data.payload || {};
 }
 
+/* ============================================================
+   CARGAR TODO
+   ============================================================ */
 async function loadData() {
     await cargarDesdeBackend();
 
@@ -140,21 +171,36 @@ async function loadData() {
     const data = await response.json();
 
     const container = document.getElementById("results");
-    container.innerHTML = ""; // limpiar
+    container.innerHTML = "";
 
     data.forEach(item => {
         const card = document.createElement("div");
         card.className = "card";
 
-        const id = item.placeId || btoa((item.title + item.address).toLowerCase()).replace(/=/g, "");
+        // ID estable
+        const id = item.placeId ||
+            btoa((item.title + item.address).toLowerCase()).replace(/=/g, "");
 
+        // Crear si no existe
         if (!dataBackend[id]) {
-            dataBackend[id] = { calls: 0, status: null };
+            dataBackend[id] = { calls: 0, status: null, history: [] };
         }
 
         const info = dataBackend[id];
 
         card.dataset.id = id;
+
+        const lastEntry = info.history.length
+            ? info.history[info.history.length - 1]
+            : null;
+
+        const lastText = lastEntry
+            ? `Último cambio: ${
+                lastEntry.type === "call"
+                    ? "Llamada"
+                    : "Estado: " + lastEntry.status
+              } por ${lastEntry.by}`
+            : "Sin cambios registrados";
 
         card.innerHTML = `
             <div class="title">${item.title || "Sin nombre"}</div>
@@ -175,6 +221,8 @@ async function loadData() {
             <div class="hours">
                 ${(item.openingHours || []).map(h => `${h.day}: ${h.hours}`).join("\n")}
             </div>
+
+            <div class="last-change">${lastText}</div>
         `;
 
         aplicarEstado(card, info.status);
@@ -184,6 +232,9 @@ async function loadData() {
     activarEventos();
 }
 
+/* ============================================================
+   EVENTOS
+   ============================================================ */
 function activarEventos() {
     document.querySelectorAll(".phone").forEach(el => {
         el.addEventListener("click", function (e) {
@@ -193,12 +244,18 @@ function activarEventos() {
     });
 }
 
+/* ============================================================
+   APLICAR ESTADO VISUAL
+   ============================================================ */
 function aplicarEstado(card, status) {
     card.classList.remove("convencido", "rechazado");
     if (status === "convencido") card.classList.add("convencido");
     if (status === "rechazado") card.classList.add("rechazado");
 }
 
+/* ============================================================
+   MENÚ POPUP
+   ============================================================ */
 function openMenu(phone, id, element) {
     closeExistingMenus();
 
@@ -226,35 +283,52 @@ function closeExistingMenus() {
     document.querySelectorAll(".popup-menu").forEach(m => m.remove());
 }
 
-function callNumber(phone, id) {
+/* ============================================================
+   ACCIONES
+   ============================================================ */
+async function callNumber(phone, id) {
     incrementCounter(id);
     window.location.href = `tel:${phone}`;
     closeExistingMenus();
 }
 
 async function markStatus(id, status) {
-    dataBackend[id].status = status;
+    const info = dataBackend[id];
 
-    // actualizar visualmente sin recargar todo
-    const card = document.querySelector(`.card[data-id="${id}"]`);
-    aplicarEstado(card, status);
+    info.status = status;
+
+    info.history.push({
+        type: "status",
+        status,
+        by: CURRENT_USER,
+        at: new Date().toISOString()
+    });
 
     await guardarEnBackend();
+    loadData();
     closeExistingMenus();
 }
 
 async function incrementCounter(id) {
-    dataBackend[id].calls++;
+    const info = dataBackend[id];
 
-    // actualizar solo el contador
-    document.getElementById(`counter_${id}`).textContent =
-        `Llamadas: ${dataBackend[id].calls}`;
+    info.calls++;
+
+    info.history.push({
+        type: "call",
+        by: CURRENT_USER,
+        at: new Date().toISOString()
+    });
 
     await guardarEnBackend();
+    loadData();
 }
+
+/* ============================================================
+   INICIO
+   ============================================================ */
 loadData();
 </script>
-
 
 </body>
 </html>
