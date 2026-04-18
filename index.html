@@ -115,143 +115,148 @@
 <div class="container" id="results"></div>
 
 <script>
-    const BACKEND_URL = "https://lavazz-nums.vercel.app";
+const BACKEND_URL = "https://lavazz-nums.vercel.app";
 
-    // 🔥 Datos del backend en memoria
-    let dataBackend = {};
+// 🔥 Datos del backend en memoria
+let dataBackend = {};
 
-    async function guardarEnBackend() {
-        await fetch(`${BACKEND_URL}/api/save`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ llamadas: dataBackend })
-        });
-    }
+async function guardarEnBackend() {
+    await fetch(`${BACKEND_URL}/api/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: dataBackend })
+    });
+}
 
-    async function cargarDesdeBackend() {
-        const r = await fetch(`${BACKEND_URL}/api/load`);
-        const data = await r.json();
-        dataBackend = data.llamadas || {};
-    }
+async function cargarDesdeBackend() {
+    const r = await fetch(`${BACKEND_URL}/api/load`);
+    const data = await r.json();
+    dataBackend = data.payload || {};
+}
 
-    async function loadData() {
-        await cargarDesdeBackend();
+async function loadData() {
+    await cargarDesdeBackend();
 
-        const response = await fetch("resultados.json");
-        const data = await response.json();
+    const response = await fetch("resultados.json");
+    const data = await response.json();
 
-        const container = document.getElementById("results");
+    const container = document.getElementById("results");
+    container.innerHTML = ""; // limpiar
 
-        data.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "card";
+    data.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
 
-            const title = item.title || "Sin nombre";
-            const phone = item.phone || "Sin teléfono";
-            const address = item.address || "Sin dirección";
-            const rating = item.totalScore 
-                ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` 
-                : "Sin rating";
+        const id = item.placeId || item.title.replace(/\s+/g, "_");
 
-            let hours = "";
-            if (item.openingHours) {
-                hours = item.openingHours
-                    .map(h => `${h.day}: ${h.hours}`)
-                    .join("\n");
-            }
+        if (!dataBackend[id]) {
+            dataBackend[id] = { calls: 0, status: null };
+        }
 
-            const id = item.placeId || item.title.replace(/\s+/g, "_");
+        const info = dataBackend[id];
 
-            // 🔥 Si no existe en backend, lo creamos
-            if (!dataBackend[id]) {
-                dataBackend[id] = { calls: 0, status: null };
-            }
+        card.dataset.id = id;
 
-            const info = dataBackend[id];
+        card.innerHTML = `
+            <div class="title">${item.title || "Sin nombre"}</div>
+            <div class="address">${item.address || "Sin dirección"}</div>
 
-            card.innerHTML = `
-                <div class="title">${title}</div>
-                <div class="address">${address}</div>
+            <div class="phone" data-phone="${item.phone}" data-id="${id}">
+                ${item.phone || "Sin teléfono"}
+            </div>
 
-                <div class="phone" data-phone="${phone}" data-id="${id}">
-                    ${phone}
-                </div>
+            <div class="call-counter" id="counter_${id}">
+                Llamadas: ${info.calls}
+            </div>
 
-                <div class="call-counter" id="counter_${id}">
-                    Llamadas: ${info.calls}
-                </div>
+            <div class="rating">
+                ${item.totalScore ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` : "Sin rating"}
+            </div>
 
-                <div class="rating">${rating}</div>
-                <div class="hours">${hours}</div>
-            `;
-
-            container.appendChild(card);
-
-            // 🔥 Aplicar estado y color
-            if (info.status === "convencido") {
-                card.classList.add("convencido");
-            } else if (info.status === "rechazado") {
-                card.classList.add("rechazado");
-            }
-        });
-
-        // Activar eventos
-        document.querySelectorAll(".phone").forEach(el => {
-            el.addEventListener("click", function (e) {
-                e.stopPropagation();
-                openMenu(this.dataset.phone, this.dataset.id, this);
-            });
-        });
-    }
-
-    function openMenu(phone, id, element) {
-        closeExistingMenus();
-
-        const menu = document.createElement("div");
-        menu.className = "popup-menu";
-
-        menu.innerHTML = `
-            <button onclick="callNumber('${phone}', '${id}')">📞 Llamar</button>
-            <button onclick="markStatus('${id}', 'convencido')">✔️ Convencido</button>
-            <button onclick="markStatus('${id}', 'rechazado')">❌ Rechazado</button>
+            <div class="hours">
+                ${(item.openingHours || []).map(h => `${h.day}: ${h.hours}`).join("\n")}
+            </div>
         `;
 
-        document.body.appendChild(menu);
+        aplicarEstado(card, info.status);
+        container.appendChild(card);
+    });
 
-        const rect = element.getBoundingClientRect();
-        menu.style.top = rect.bottom + "px";
-        menu.style.left = rect.left + "px";
+    activarEventos();
+}
 
-        setTimeout(() => {
-            document.addEventListener("click", closeExistingMenus, { once: true });
-        }, 100);
-    }
+function activarEventos() {
+    document.querySelectorAll(".phone").forEach(el => {
+        el.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openMenu(this.dataset.phone, this.dataset.id, this);
+        });
+    });
+}
 
-    function closeExistingMenus() {
-        document.querySelectorAll(".popup-menu").forEach(m => m.remove());
-    }
+function aplicarEstado(card, status) {
+    card.classList.remove("convencido", "rechazado");
+    if (status === "convencido") card.classList.add("convencido");
+    if (status === "rechazado") card.classList.add("rechazado");
+}
 
-    function callNumber(phone, id) {
-        incrementCounter(id);
-        window.location.href = `tel:${phone}`;
-        closeExistingMenus();
-    }
+function openMenu(phone, id, element) {
+    closeExistingMenus();
 
-    function markStatus(id, status) {
-        dataBackend[id].status = status;
-        guardarEnBackend();
-        loadData(); // 🔥 Recargar visualmente
-        closeExistingMenus();
-    }
+    const menu = document.createElement("div");
+    menu.className = "popup-menu";
 
-    function incrementCounter(id) {
-        dataBackend[id].calls++;
-        guardarEnBackend();
-        loadData(); // 🔥 Recargar visualmente
-    }
+    menu.innerHTML = `
+        <button onclick="callNumber('${phone}', '${id}')">📞 Llamar</button>
+        <button onclick="markStatus('${id}', 'convencido')">✔️ Convencido</button>
+        <button onclick="markStatus('${id}', 'rechazado')">❌ Rechazado</button>
+    `;
 
-    loadData();
+    document.body.appendChild(menu);
+
+    const rect = element.getBoundingClientRect();
+    menu.style.top = rect.bottom + "px";
+    menu.style.left = rect.left + "px";
+
+    setTimeout(() => {
+        document.addEventListener("click", closeExistingMenus, { once: true });
+    }, 100);
+}
+
+function closeExistingMenus() {
+    document.querySelectorAll(".popup-menu").forEach(m => m.remove());
+}
+
+function callNumber(phone, id) {
+    incrementCounter(id);
+    window.location.href = `tel:${phone}`;
+    closeExistingMenus();
+}
+
+async function markStatus(id, status) {
+    dataBackend[id].status = status;
+
+    // actualizar visualmente sin recargar todo
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    aplicarEstado(card, status);
+
+    await guardarEnBackend();
+    closeExistingMenus();
+}
+
+async function incrementCounter(id) {
+    dataBackend[id].calls++;
+
+    // actualizar solo el contador
+    document.getElementById(`counter_${id}`).textContent =
+        `Llamadas: ${dataBackend[id].calls}`;
+
+    await guardarEnBackend();
+}
+
+loadData();
 </script>
+
 
 </body>
 </html>
