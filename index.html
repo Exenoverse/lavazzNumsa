@@ -2,17 +2,73 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Acceso</title>
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 320px;
+            text-align: center;
+        }
+
+        #login-box h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0078ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #005fcc;
+        }
+
+        #login-error {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Acceso</h2>
-
-<input type="text" id="login-name" placeholder="Tu nombre">
-<input type="password" id="login-pin" placeholder="PIN">
-<button id="login-button">Entrar</button>
-
-<div id="login-error" style="color:red;"></div>
+<div id="login-box">
+    <h2>Acceso</h2>
+    <input type="text" id="login-name" placeholder="Tu nombre">
+    <input type="password" id="login-pin" placeholder="PIN de acceso">
+    <button id="login-button">Entrar</button>
+    <div id="login-error"></div>
+</div>
 
 <script>
 const BACKEND_URL = "https://lavazz-nums.vercel.app";
@@ -48,11 +104,9 @@ async function tryLogin() {
         return;
     }
 
-    // Guardar datos
     localStorage.setItem("caller_name", name);
     localStorage.setItem("access_hash", hash);
 
-    // Ir a la app
     window.location.href = "app.html";
 }
 
