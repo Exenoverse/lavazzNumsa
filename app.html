@@ -28,6 +28,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border: 3px solid transparent;
+            transition: 0.2s;
         }
 
         .card.convencido {
@@ -49,6 +50,18 @@
             cursor: pointer;
             margin-top: 10px;
             display: inline-block;
+        }
+
+        .rating {
+            margin-top: 8px;
+            font-size: 16px;
+            color: #444;
+        }
+
+        .history {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
         }
 
         .popup-menu {
@@ -133,13 +146,38 @@ async function loadData() {
             dataBackend[id] = { calls: 0, status: null, history: [] };
         }
 
+        const info = dataBackend[id];
+
+        // Último cambio
+        let lastText = "Sin cambios registrados";
+        if (info.history.length > 0) {
+            const last = info.history[info.history.length - 1];
+            if (last.type === "call") {
+                lastText = `Última llamada por ${last.by}`;
+            } else {
+                lastText = `Último estado: ${last.status} por ${last.by}`;
+            }
+        }
+
+        // Aplicar color según estado
+        if (info.status === "convencido") div.classList.add("convencido");
+        if (info.status === "rechazado") div.classList.add("rechazado");
+
         div.innerHTML = `
             <div class="title">${item.title}</div>
             <div>${item.address}</div>
+
             <div class="phone" data-phone="${item.phone}" data-id="${id}">
                 ${item.phone}
             </div>
-            <div>Llamadas: ${dataBackend[id].calls}</div>
+
+            <div class="rating">
+                ${item.totalScore ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` : "Sin rating"}
+            </div>
+
+            <div>Llamadas: ${info.calls}</div>
+
+            <div class="history">${lastText}</div>
         `;
 
         div.querySelector(".phone").onclick = () => openMenu(item.phone, id, div);
@@ -177,12 +215,28 @@ function closeExistingMenus() {
 
 async function callNumber(phone, id) {
     dataBackend[id].calls++;
+
+    dataBackend[id].history.push({
+        type: "call",
+        by: CURRENT_USER,
+        at: new Date().toISOString()
+    });
+
     await guardarEnBackend();
+    loadData();
     window.location.href = `tel:${phone}`;
 }
 
 async function markStatus(id, status) {
     dataBackend[id].status = status;
+
+    dataBackend[id].history.push({
+        type: "status",
+        status,
+        by: CURRENT_USER,
+        at: new Date().toISOString()
+    });
+
     await guardarEnBackend();
     loadData();
 }
