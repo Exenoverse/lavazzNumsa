@@ -1,26 +1,53 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accedi</title>
-    <link rel="stylesheet" href="css/login.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accedi — Lavazz</title>
+  <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
-
-<div class="login-wrapper">
-    <div class="login-box">
-        <h1>Accedi</h1>
-
-        <input type="text" id="login-name" placeholder="Il tuo nome">
-        <input type="password" id="login-pin" placeholder="PIN di accesso">
-
-        <button id="login-button">Entra</button>
-
-        <div id="login-error"></div>
+  <main class="page">
+    <div class="brand">
+      <!-- Sustituye por tu logo si quieres -->
+      <div class="logo" aria-hidden="true">L</div>
+      <h1 class="brand-title">Lavazz</h1>
+      <p class="brand-sub">Accedi alla dashboard</p>
     </div>
-</div>
 
-<script src="js/login.js"></script>
+    <form id="login-form" class="login-card" autocomplete="on" novalidate>
+      <div class="field">
+        <label for="login-name" class="label">Nome</label>
+        <input id="login-name" name="name" type="text" inputmode="text" autocomplete="name"
+               placeholder="Mario" required aria-required="true" />
+      </div>
+
+      <div class="field">
+        <label for="login-pin" class="label">PIN</label>
+        <div class="input-row">
+          <input id="login-pin" name="pin" type="password" inputmode="numeric" autocomplete="one-time-code"
+                 placeholder="••••" required aria-required="true" pattern="\d{4,}" />
+          <button type="button" id="toggle-pin" class="icon-btn" aria-label="Mostra PIN" title="Mostra PIN">👁️</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="remember">
+          <input id="remember" type="checkbox" />
+          Ricordami
+        </label>
+
+        <button id="login-button" class="primary" type="submit" aria-live="polite">
+          Entra
+        </button>
+      </div>
+
+      <div id="login-error" role="status" aria-live="assertive" class="error" hidden></div>
+
+      <div class="hint">Usa il PIN fornito dal team. Nessun account? Contatta l'amministratore.</div>
+    </form>
+  </main>
+
+  <script src="js/login.js" defer></script>
 </body>
 </html>
