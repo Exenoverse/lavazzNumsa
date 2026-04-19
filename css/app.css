@@ -8,14 +8,17 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 25px;
+    font-size: 24px;
 }
 
+/* GRID RESPONSIVE */
 #results {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
 }
 
+/* TARJETAS */
 .card {
     background: white;
     padding: 20px;
@@ -34,7 +37,7 @@ h1 {
 }
 
 .title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -44,11 +47,12 @@ h1 {
     cursor: pointer;
     margin-top: 10px;
     display: inline-block;
+    font-size: 16px;
 }
 
 .rating {
     margin-top: 8px;
-    font-size: 16px;
+    font-size: 15px;
     color: #444;
 }
 
@@ -58,25 +62,74 @@ h1 {
     color: #666;
 }
 
+/* POPUP RESPONSIVE */
 .popup-menu {
-    position: absolute;
+    position: fixed; /* antes era absolute → se salía de pantalla */
     background: white;
-    padding: 10px;
+    padding: 12px;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     z-index: 9999;
+    width: 200px;
 }
 
 .popup-menu button {
-    padding: 8px;
+    padding: 12px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-size: 16px;
 }
 
 .popup-menu button:hover {
     background: #eee;
+}
+
+/* 📱 MÓVIL */
+@media (max-width: 600px) {
+
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    #results {
+        grid-template-columns: 1fr; /* una tarjeta por fila */
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 17px;
+    }
+
+    .phone {
+        font-size: 15px;
+    }
+
+    .rating {
+        font-size: 14px;
+    }
+
+    .popup-menu {
+        width: 90%;
+        left: 5% !important;
+        top: auto !important;
+        bottom: 20px;
+    }
+}
+
+/* 📱 TABLET */
+@media (min-width: 600px) and (max-width: 900px) {
+    #results {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
 }
