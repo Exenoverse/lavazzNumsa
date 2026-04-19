@@ -1,0 +1,40 @@
+const BACKEND_URL = "https://lavazz-nums.vercel.app";
+
+async function sha256(text) {
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function tryLogin() {
+    const name = document.getElementById("login-name").value.trim() || "anon";
+    const pin = document.getElementById("login-pin").value.trim();
+    const errorDiv = document.getElementById("login-error");
+
+    if (!pin) {
+        errorDiv.textContent = "Debes introducir el PIN.";
+        return;
+    }
+
+    const hash = await sha256(pin);
+
+    const res = await fetch(`${BACKEND_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hash })
+    });
+
+    if (!res.ok) {
+        errorDiv.textContent = "PIN incorrecto.";
+        return;
+    }
+
+    localStorage.setItem("caller_name", name);
+    localStorage.setItem("access_hash", hash);
+
+    window.location.href = "app.html";
+}
+
+document.getElementById("login-button").onclick = tryLogin;
