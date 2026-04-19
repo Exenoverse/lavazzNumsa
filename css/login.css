@@ -1,3 +1,4 @@
+/* ====== ESTILOS BASE ====== */
 body {
     background: #f0f2f5;
     font-family: Arial, sans-serif;
@@ -6,6 +7,7 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
+    padding: 20px;
 }
 
 #login-box {
@@ -13,32 +15,34 @@ body {
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    width: 320px;
+    width: 350px;
+    max-width: 100%;
     text-align: center;
 }
 
 #login-box h2 {
     margin-bottom: 20px;
     color: #333;
+    font-size: 24px;
 }
 
 input {
     width: 100%;
-    padding: 12px;
-    margin: 8px 0;
+    padding: 14px;
+    margin: 10px 0;
     border-radius: 6px;
     border: 1px solid #ccc;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 button {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     background: #0078ff;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 16px;
+    font-size: 17px;
     cursor: pointer;
     margin-top: 10px;
 }
@@ -51,4 +55,46 @@ button:hover {
     color: #e74c3c;
     margin-top: 10px;
     font-size: 14px;
+}
+
+/* ====== MÓVIL PEQUEÑO ====== */
+@media (max-width: 480px) {
+
+    body {
+        padding: 10px;
+        height: auto;
+    }
+
+    #login-box {
+        width: 100%;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    #login-box h2 {
+        font-size: 20px;
+    }
+
+    input {
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    button {
+        padding: 12px;
+        font-size: 16px;
+    }
+}
+
+/* ====== TABLET ====== */
+@media (min-width: 480px) and (max-width: 900px) {
+
+    #login-box {
+        width: 400px;
+        padding: 28px;
+    }
+
+    #login-box h2 {
+        font-size: 22px;
+    }
 }
