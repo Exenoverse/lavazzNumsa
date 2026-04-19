@@ -1,4 +1,4 @@
-/* ====== ESTILOS BASE ====== */
+/* ====== BASE ====== */
 body {
     background: #f0f2f5;
     font-family: Arial, sans-serif;
@@ -12,39 +12,39 @@ body {
 
 #login-box {
     background: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    width: 350px;
+    padding: 32px;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    width: 380px;          /* más grande */
     max-width: 100%;
     text-align: center;
 }
 
 #login-box h2 {
-    margin-bottom: 20px;
+    margin-bottom: 22px;
     color: #333;
-    font-size: 24px;
+    font-size: 26px;       /* más grande */
 }
 
 input {
     width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    border-radius: 6px;
+    padding: 16px;         /* más grande */
+    margin: 12px 0;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    font-size: 16px;
+    font-size: 18px;       /* más grande */
 }
 
 button {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     background: #0078ff;
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 17px;
+    border-radius: 8px;
+    font-size: 19px;       /* más grande */
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 button:hover {
@@ -53,8 +53,8 @@ button:hover {
 
 #login-error {
     color: #e74c3c;
-    margin-top: 10px;
-    font-size: 14px;
+    margin-top: 12px;
+    font-size: 16px;
 }
 
 /* ====== MÓVIL PEQUEÑO ====== */
@@ -67,22 +67,22 @@ button:hover {
 
     #login-box {
         width: 100%;
-        padding: 20px;
-        border-radius: 10px;
+        padding: 26px;
+        border-radius: 12px;
     }
 
     #login-box h2 {
-        font-size: 20px;
+        font-size: 24px;
     }
 
     input {
-        padding: 12px;
-        font-size: 15px;
+        padding: 15px;
+        font-size: 17px;
     }
 
     button {
-        padding: 12px;
-        font-size: 16px;
+        padding: 15px;
+        font-size: 18px;
     }
 }
 
@@ -90,11 +90,11 @@ button:hover {
 @media (min-width: 480px) and (max-width: 900px) {
 
     #login-box {
-        width: 400px;
-        padding: 28px;
+        width: 420px;
+        padding: 30px;
     }
 
     #login-box h2 {
-        font-size: 22px;
+        font-size: 25px;
     }
 }
