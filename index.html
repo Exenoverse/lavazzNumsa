@@ -3,62 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Acceso</title>
-    <style>
-        body {
-            background: #f0f2f5;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        #login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            width: 320px;
-            text-align: center;
-        }
-
-        #login-box h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 15px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #0078ff;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background: #005fcc;
-        }
-
-        #login-error {
-            color: #e74c3c;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
 
@@ -70,48 +15,6 @@
     <div id="login-error"></div>
 </div>
 
-<script>
-const BACKEND_URL = "https://lavazz-nums.vercel.app";
-
-async function sha256(text) {
-    const enc = new TextEncoder().encode(text);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    return Array.from(new Uint8Array(buf))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-}
-
-async function tryLogin() {
-    const name = document.getElementById("login-name").value.trim() || "anon";
-    const pin = document.getElementById("login-pin").value.trim();
-    const errorDiv = document.getElementById("login-error");
-
-    if (!pin) {
-        errorDiv.textContent = "Debes introducir el PIN.";
-        return;
-    }
-
-    const hash = await sha256(pin);
-
-    const res = await fetch(`${BACKEND_URL}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hash })
-    });
-
-    if (!res.ok) {
-        errorDiv.textContent = "PIN incorrecto.";
-        return;
-    }
-
-    localStorage.setItem("caller_name", name);
-    localStorage.setItem("access_hash", hash);
-
-    window.location.href = "app.html";
-}
-
-document.getElementById("login-button").onclick = tryLogin;
-</script>
-
+<script src="js/login.js"></script>
 </body>
 </html>
