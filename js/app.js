@@ -20,14 +20,15 @@ async function cargarDesdeBackend() {
 }
 
 async function guardarEnBackend() {
-    await fetch(`${BACKEND_URL}/api/save`, {
+    // Guardar en segundo plano (sin await)
+    fetch(`${BACKEND_URL}/api/save`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-Access-Hash": ACCESS_HASH
         },
         body: JSON.stringify({ payload: dataBackend })
-    });
+    }).catch(err => console.error("Error guardando:", err));
 }
 
 async function loadData() {
@@ -116,22 +117,23 @@ function closeExistingMenus() {
 }
 
 async function callNumber(phone, id) {
+    // 🔥 UI instantánea
     dataBackend[id].calls++;
-
     dataBackend[id].history.push({
         type: "call",
         by: CURRENT_USER,
         at: new Date().toISOString()
     });
 
-    await guardarEnBackend();
-    loadData();
+    loadData();      // 🔥 Actualiza UI al instante
+    guardarEnBackend(); // 🔥 Guarda en segundo plano
+
     window.location.href = `tel:${phone}`;
 }
 
 async function markStatus(id, status) {
+    // 🔥 UI instantánea
     dataBackend[id].status = status;
-
     dataBackend[id].history.push({
         type: "status",
         status,
@@ -139,8 +141,8 @@ async function markStatus(id, status) {
         at: new Date().toISOString()
     });
 
-    await guardarEnBackend();
-    loadData();
+    loadData();        // 🔥 Actualiza UI al instante
+    guardarEnBackend(); // 🔥 Guarda en segundo plano
 }
 
 (function init() {
