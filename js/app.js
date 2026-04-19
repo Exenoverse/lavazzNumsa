@@ -5,15 +5,15 @@ let ACCESS_HASH = null;
 let dataBackend = {};
 
 // =========================
-// CARGAR DESDE BACKEND
+// CARICAMENTO DAL BACKEND
 // =========================
-async function cargarDesdeBackend() {
+async function caricaDalBackend() {
     const r = await fetch(`${BACKEND_URL}/api/load`, {
         headers: { "X-Access-Hash": ACCESS_HASH }
     });
 
     if (!r.ok) {
-        alert("Acceso no válido. Volviendo al login.");
+        alert("Accesso non valido. Ritorno al login.");
         window.location.href = "index.html";
         return;
     }
@@ -23,9 +23,9 @@ async function cargarDesdeBackend() {
 }
 
 // =========================
-// GUARDAR EN BACKEND
+// SALVATAGGIO NEL BACKEND
 // =========================
-async function guardarEnBackend() {
+async function salvaNelBackend() {
     fetch(`${BACKEND_URL}/api/save`, {
         method: "POST",
         headers: {
@@ -33,14 +33,14 @@ async function guardarEnBackend() {
             "X-Access-Hash": ACCESS_HASH
         },
         body: JSON.stringify({ payload: dataBackend })
-    }).catch(err => console.error("Error guardando:", err));
+    }).catch(err => console.error("Errore durante il salvataggio:", err));
 }
 
 // =========================
-// CARGAR TARJETAS
+// CARICAMENTO DELLE CARTE
 // =========================
 async function loadData() {
-    await cargarDesdeBackend();
+    await caricaDalBackend();
 
     const response = await fetch("resultados.json");
     const data = await response.json();
@@ -57,16 +57,16 @@ async function loadData() {
 
         const info = dataBackend[id] || { calls: 0, status: null, history: [] };
 
-        let lastText = "Sin cambios registrados";
+        let lastText = "Nessuna modifica registrata";
         if (info.history.length > 0) {
             const last = info.history.at(-1);
             lastText = last.type === "call"
-                ? `Última llamada por ${last.by}`
-                : `Último estado: ${last.status} por ${last.by}`;
+                ? `Ultima chiamata da ${last.by}`
+                : `Ultimo stato: ${last.status} da ${last.by}`;
         }
 
-        if (info.status === "convencido") div.classList.add("convencido");
-        if (info.status === "rechazado") div.classList.add("rechazado");
+        if (info.status === "convinto") div.classList.add("convencido");
+        if (info.status === "rifiutato") div.classList.add("rechazado");
 
         div.innerHTML = `
             <div class="title">${item.title}</div>
@@ -77,10 +77,10 @@ async function loadData() {
             </div>
 
             <div class="rating">
-                ${item.totalScore ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} reseñas)` : "Sin rating"}
+                ${item.totalScore ? `${item.totalScore} ⭐ (${item.reviewsCount || 0} recensioni)` : "Nessuna valutazione"}
             </div>
 
-            <div class="calls">Llamadas: ${info.calls}</div>
+            <div class="calls">Chiamate: ${info.calls}</div>
 
             <div class="history">${lastText}</div>
         `;
@@ -101,9 +101,9 @@ function openMenu(phone, id, element) {
     menu.className = "popup-menu";
 
     menu.innerHTML = `
-        <button onclick="callNumber('${phone}', '${id}')">📞 Llamar</button>
-        <button onclick="markStatus('${id}', 'convencido')">✔️ Convencido</button>
-        <button onclick="markStatus('${id}', 'rechazado')">❌ Rechazado</button>
+        <button onclick="callNumber('${phone}', '${id}')">📞 Chiama</button>
+        <button onclick="markStatus('${id}', 'convinto')">✔️ Convinto</button>
+        <button onclick="markStatus('${id}', 'rifiutato')">❌ Rifiutato</button>
     `;
 
     document.body.appendChild(menu);
@@ -122,7 +122,7 @@ function closeExistingMenus() {
 }
 
 // =========================
-// LLAMAR
+// CHIAMATA
 // =========================
 async function callNumber(phone, id) {
     closeExistingMenus();
@@ -139,13 +139,13 @@ async function callNumber(phone, id) {
     });
 
     updateCardUI(id);
-    guardarEnBackend();
+    salvaNelBackend();
 
     window.location.href = `tel:${phone}`;
 }
 
 // =========================
-// MARCAR ESTADO
+// CAMBIARE STATO
 // =========================
 async function markStatus(id, status) {
     closeExistingMenus();
@@ -163,11 +163,11 @@ async function markStatus(id, status) {
     });
 
     updateCardUI(id);
-    guardarEnBackend();
+    salvaNelBackend();
 }
 
 // =========================
-// ACTUALIZAR SOLO UNA TARJETA
+// AGGIORNARE SOLO UNA CARTA
 // =========================
 function updateCardUI(id) {
     const phoneEl = document.querySelector(`.phone[data-id="${id}"]`);
@@ -179,19 +179,19 @@ function updateCardUI(id) {
     card.querySelector(".history").textContent =
         info.history.length > 0
             ? (info.history.at(-1).type === "call"
-                ? `Última llamada por ${info.history.at(-1).by}`
-                : `Último estado: ${info.history.at(-1).status} por ${info.history.at(-1).by}`)
-            : "Sin cambios registrados";
+                ? `Ultima chiamata da ${info.history.at(-1).by}`
+                : `Ultimo stato: ${info.history.at(-1).status} da ${info.history.at(-1).by}`)
+            : "Nessuna modifica registrata";
 
-    card.querySelector(".calls").textContent = `Llamadas: ${info.calls}`;
+    card.querySelector(".calls").textContent = `Chiamate: ${info.calls}`;
 
     card.classList.remove("convencido", "rechazado");
-    if (info.status === "convencido") card.classList.add("convencido");
-    if (info.status === "rechazado") card.classList.add("rechazado");
+    if (info.status === "convinto") card.classList.add("convencido");
+    if (info.status === "rifiutato") card.classList.add("rechazado");
 }
 
 // =========================
-// BUSCADOR EN TIEMPO REAL
+// RICERCA IN TEMPO REALE
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
     const search = document.getElementById("search");
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =========================
-// INICIO
+// INIZIALIZZAZIONE
 // =========================
 (function init() {
     CURRENT_USER = localStorage.getItem("caller_name");
