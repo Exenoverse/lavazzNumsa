@@ -114,10 +114,12 @@ function closeExistingMenus() {
 
 async function callNumber(phone, id) {
     closeExistingMenus();
+
     if (!dataBackend[id]) {
         dataBackend[id] = { calls: 0, status: null, history: [] };
     }
 
+    // Actualizar datos en memoria
     dataBackend[id].calls++;
     dataBackend[id].history.push({
         type: "call",
@@ -125,14 +127,19 @@ async function callNumber(phone, id) {
         at: new Date().toISOString()
     });
 
-    loadData();
+    // 🔥 Actualizar SOLO la tarjeta, sin recargar todo
+    updateCardUI(id);
+
+    // Guardar en segundo plano
     guardarEnBackend();
 
     window.location.href = `tel:${phone}`;
 }
 
+
 async function markStatus(id, status) {
     closeExistingMenus();
+
     if (!dataBackend[id]) {
         dataBackend[id] = { calls: 0, status: null, history: [] };
     }
@@ -145,9 +152,36 @@ async function markStatus(id, status) {
         at: new Date().toISOString()
     });
 
-    loadData();
+    // 🔥 Actualizar SOLO la tarjeta
+    updateCardUI(id);
+
     guardarEnBackend();
 }
+
+function updateCardUI(id) {
+    const card = document.querySelector(`[data-id="${id}"]`).closest(".card");
+    const info = dataBackend[id];
+
+    // Actualizar contador
+    card.querySelector(".history").textContent =
+        info.history.length > 0
+            ? (info.history.at(-1).type === "call"
+                ? `Última llamada por ${info.history.at(-1).by}`
+                : `Último estado: ${info.history.at(-1).status} por ${info.history.at(-1).by}`)
+            : "Sin cambios registrados";
+
+    card.querySelector(".rating"); // no cambia
+
+    card.querySelector(".phone"); // no cambia
+
+    card.querySelector("div:nth-child(5)").textContent = `Llamadas: ${info.calls}`;
+
+    // Colores
+    card.classList.remove("convencido", "rechazado");
+    if (info.status === "convencido") card.classList.add("convencido");
+    if (info.status === "rechazado") card.classList.add("rechazado");
+}
+
 
 (function init() {
     CURRENT_USER = localStorage.getItem("caller_name");
