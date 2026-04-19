@@ -113,6 +113,7 @@ function closeExistingMenus() {
 }
 
 async function callNumber(phone, id) {
+    closeExistingMenus();
     if (!dataBackend[id]) {
         dataBackend[id] = { calls: 0, status: null, history: [] };
     }
@@ -131,6 +132,7 @@ async function callNumber(phone, id) {
 }
 
 async function markStatus(id, status) {
+    closeExistingMenus();
     if (!dataBackend[id]) {
         dataBackend[id] = { calls: 0, status: null, history: [] };
     }
