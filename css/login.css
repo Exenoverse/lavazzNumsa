@@ -1,87 +1,91 @@
-/* ====== BASE ====== */
+/* ====== LAYOUT BASE ====== */
 body {
-    background: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    background: #eef1f5;
     font-family: Arial, sans-serif;
+}
+
+.login-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
     padding: 20px;
 }
 
-#login-box {
+/* ====== CONTENITORE LOGIN ====== */
+.login-box {
     background: white;
-    padding: 32px;
-    border-radius: 14px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-    width: 380px;          /* más grande */
-    max-width: 100%;
+    width: 100%;
+    max-width: 420px; /* grande anche su PC */
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.12);
     text-align: center;
 }
 
-#login-box h2 {
-    margin-bottom: 22px;
-    color: #333;
-    font-size: 26px;       /* más grande */
+.login-box h1 {
+    margin-bottom: 30px;
+    font-size: 32px;
+    color: #222;
 }
 
+/* ====== INPUT ====== */
 input {
     width: 100%;
-    padding: 16px;         /* más grande */
+    padding: 18px;
     margin: 12px 0;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #ccc;
-    font-size: 18px;       /* más grande */
+    font-size: 18px;
+    box-sizing: border-box;
 }
 
+/* ====== BOTTONE ====== */
 button {
     width: 100%;
-    padding: 16px;
+    padding: 18px;
+    margin-top: 20px;
     background: #0078ff;
     color: white;
     border: none;
-    border-radius: 8px;
-    font-size: 19px;       /* más grande */
+    border-radius: 10px;
+    font-size: 20px;
     cursor: pointer;
-    margin-top: 12px;
 }
 
 button:hover {
     background: #005fcc;
 }
 
+/* ====== ERRORE ====== */
 #login-error {
+    margin-top: 15px;
     color: #e74c3c;
-    margin-top: 12px;
     font-size: 16px;
 }
 
-/* ====== MÓVIL PEQUEÑO ====== */
+/* ====== MOBILE ====== */
 @media (max-width: 480px) {
 
-    body {
-        padding: 10px;
-        height: auto;
+    .login-box {
+        padding: 30px;
+        border-radius: 16px;
+        max-width: 100%;
     }
 
-    #login-box {
-        width: 100%;
-        padding: 26px;
-        border-radius: 12px;
-    }
-
-    #login-box h2 {
-        font-size: 24px;
+    .login-box h1 {
+        font-size: 28px;
     }
 
     input {
-        padding: 15px;
+        padding: 16px;
         font-size: 17px;
     }
 
     button {
-        padding: 15px;
+        padding: 16px;
         font-size: 18px;
     }
 }
@@ -89,12 +93,12 @@ button:hover {
 /* ====== TABLET ====== */
 @media (min-width: 480px) and (max-width: 900px) {
 
-    #login-box {
-        width: 420px;
-        padding: 30px;
+    .login-box {
+        max-width: 500px;
+        padding: 45px;
     }
 
-    #login-box h2 {
-        font-size: 25px;
+    .login-box h1 {
+        font-size: 30px;
     }
 }
